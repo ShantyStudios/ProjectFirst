@@ -2,7 +2,6 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
@@ -28,12 +27,12 @@ public class MyGdxGame implements ApplicationListener {
     private SpriteBatch batch;
     private BitmapFont font;
 
-    private Texture dropImage;
+    private Texture bubbleImage;
     private Texture backgroundTexture;
     private Sound dropSound;
     private Music rainMusic;
 
-    private Array<Rectangle> bubbles;
+    private Array<Bubble> bubbles;
     private long lastDropTime;
     private int score;
 
@@ -43,7 +42,7 @@ public class MyGdxGame implements ApplicationListener {
         camera.setToOrtho(false, 800, 480);
 
         backgroundTexture = new Texture("background.jpg");
-        dropImage = new Texture("droplet.png");
+        bubbleImage = new Texture("bubble.png");
 
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
         rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
@@ -55,7 +54,7 @@ public class MyGdxGame implements ApplicationListener {
 
         score = 0;
 
-        bubbles = new Array<Rectangle>();
+        bubbles = new Array<Bubble>();
         spawnBubble();
     }
 
@@ -73,8 +72,8 @@ public class MyGdxGame implements ApplicationListener {
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
         font.draw(batch, "Score: " + score, 700, 100); // player score
 
-        for (Rectangle Bubble : bubbles) {
-            batch.draw(dropImage, Bubble.x, Bubble.y);// draws bubbles
+        for (Bubble bubble : bubbles) {
+            batch.draw(bubbleImage, bubble.x, bubble.y, bubble.size, bubble.size);// draws bubbles
         }
         batch.end();
 
@@ -83,40 +82,82 @@ public class MyGdxGame implements ApplicationListener {
             spawnBubble();
         }
 
-        // bubble spawner and scorer for players
-        for (Rectangle bubble : bubbles) {// iter.hasNext()
-            bubble.y -= 200 * Gdx.graphics.getDeltaTime();
-            if (bubble.y + 64 < 0) {
+        //Bubble Movement
+        for (Bubble bubble : bubbles) {
+            moveBubble(bubble);
+            if (!inBounds(bubble)) {
+                score--;
                 bubbles.removeValue(bubble, true);
             }
+        }
 
-            if (Gdx.input.isButtonPressed(Buttons.LEFT)) {
-                Vector3 touchPos = new Vector3();
-                touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-                camera.unproject(touchPos);
-
+        //click handling
+        if (Gdx.input.isTouched()) {
+            Vector3 touchPos = new Vector3();
+            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            camera.unproject(touchPos);
+            for (Bubble bubble : bubbles) {
                 if (bubble.overlaps(new Rectangle(touchPos.x, touchPos.y, MOUSE_SIZE, MOUSE_SIZE))) {
-                    dropSound.play();
-                    bubbles.removeValue(bubble, true);
-                    score--;
-                }
-
-                if (bubble.y - 64 < 0) {
-                    score--;
+                    score++;
                     bubbles.removeValue(bubble, true);
                 }
             }
         }
     }
 
-    // creates bubble
+    private boolean inBounds(Rectangle r) {
+        return r.x >= 0 &&
+                r.y >= 0 &&
+                r.x + (.5 * r.width) <= WIDTH &&
+                r.y + (.5 * r.height) <= HEIGHT;
+    }
+
+    private void moveBubble(Bubble b) {
+        switch (b.movementDirection) {
+            case UP:
+                b.y += BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
+                break;
+            case RIGHT:
+                b.x += BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
+                break;
+            case LEFT:
+                b.x -= BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
+                break;
+            case DOWN:
+                b.y -= BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
+                break;
+        }
+    }
+
     private void spawnBubble() {
-        Rectangle Bubble = new Rectangle();
-        Bubble.x = MathUtils.random(0, 800 - 64);
-        Bubble.y = 480;
-        Bubble.width = 64;
-        Bubble.height = 64;
-        bubbles.add(Bubble);
+        Bubble bubble = new Bubble(Direction.randomDirection());
+        //Bubble bubble = new Bubble(Direction.DOWN);
+
+        float mod = MathUtils.random(0.2f, 2f);
+
+        bubble.speedModifier = mod;
+        bubble.setSizeByModifier(mod);
+
+        switch (bubble.movementDirection) {
+            case UP:
+                bubble.x = MathUtils.random(0, WIDTH - bubble.size);
+                bubble.y = 0;
+                break;
+            case RIGHT:
+                bubble.x = 0;
+                bubble.y = MathUtils.random(0, HEIGHT - bubble.size);
+                break;
+            case LEFT:
+                bubble.x = WIDTH - bubble.size;
+                bubble.y = MathUtils.random(0, HEIGHT - bubble.size);
+                break;
+            case DOWN:
+                bubble.x = MathUtils.random(0, WIDTH - bubble.size);
+                bubble.y = HEIGHT - bubble.size;
+                break;
+        }
+
+        bubbles.add(bubble);
         lastDropTime = TimeUtils.nanoTime();
     }
 
@@ -140,7 +181,7 @@ public class MyGdxGame implements ApplicationListener {
 
     @Override
     public void dispose() {
-        dropImage.dispose();
+        bubbleImage.dispose();
         dropSound.dispose();
         rainMusic.dispose();
     }
