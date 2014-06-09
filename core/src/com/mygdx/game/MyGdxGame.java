@@ -18,10 +18,9 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 public class MyGdxGame implements ApplicationListener {
 
-    public static final String Title = "Bubble Game";
-    public static final int V_Width = 400;
-    public static final int V_Height = 240;
-    public static final int Scale = 2;
+    public static final String TITLE = "Bubble Game";
+    public static final int WIDTH = 800;
+    public static final int HEIGHT = 480;
 
     public static int BUCKET_SPEED = 500;// Completely useless
     // public static int BUCKET_SPEED2 = 500;
@@ -49,7 +48,7 @@ public class MyGdxGame implements ApplicationListener {
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
-		//player1 = new Texture("bucket.png");
+        //player1 = new Texture("bucket.png");
         //player2 = new Texture("bucket.png");
         dropImage = new Texture("droplet.png");
 
@@ -133,13 +132,13 @@ public class MyGdxGame implements ApplicationListener {
          * player1Sprite.y = touchPos.y - 64 / 2; }
          */
 
-		// player1boundary
+        // player1boundary
         // bubble rate droper
         if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
             spawnBubble();
         }
 
-		// bubble spawner and scorer for players
+        // bubble spawner and scorer for players
         // Iterator<Rectangle> iter = Bubbles.iterator();
         for (Rectangle Bubble : Bubbles) {// iter.hasNext()
             // Rectangle Bubble = iter.next();
@@ -155,7 +154,7 @@ public class MyGdxGame implements ApplicationListener {
                 player1Sprite.x = touchPos.x - 64 / 2;
                 player1Sprite.y = touchPos.y - 64 / 2;
                 if (Bubble.overlaps(player1Sprite) &&
-                         player1Sprite.y >= 450 - 64)// checks if player is
+                        player1Sprite.y >= 450 - 64)// checks if player is
                 // touching top border,
                 // and has a bubble with
                 // bucket

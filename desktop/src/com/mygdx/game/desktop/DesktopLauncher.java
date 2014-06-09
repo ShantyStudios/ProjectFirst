@@ -8,9 +8,9 @@ public class DesktopLauncher {
 
     public static void main(String[] arg) {
         LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-        config.title = MyGdxGame.Title;
-        config.width = MyGdxGame.V_Width * MyGdxGame.Scale;
-        config.height = MyGdxGame.V_Height * MyGdxGame.Scale;
+        config.title = MyGdxGame.TITLE;
+        config.width = MyGdxGame.WIDTH;
+        config.height = MyGdxGame.HEIGHT;
         new LwjglApplication(new MyGdxGame(), config);
     }
 }
