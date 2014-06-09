@@ -1,5 +1,6 @@
 package com.mygdx.game;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
 
 /**
@@ -22,5 +23,55 @@ public class Bubble extends Rectangle {
         this.size = BASE_SIZE * mod;
         this.width = size;
         this.height = size;
+    }
+
+    public void move() {
+        switch (movementDirection) {
+            case UP:
+                moveUp();
+                break;
+            case RIGHT:
+                moveRight();
+                break;
+            case LEFT:
+                moveLeft();
+                break;
+            case DOWN:
+                moveDown();
+                break;
+            case UP_RIGHT:
+                moveUp();
+                moveRight();
+                break;
+            case UP_LEFT:
+                moveUp();
+                moveLeft();
+                break;
+            case DOWN_LEFT:
+                moveDown();
+                moveLeft();
+                break;
+            case DOWN_RIGHT:
+                moveDown();
+                moveRight();
+                break;
+
+        }
+    }
+
+    private void moveRight() {
+        x += MyGdxGame.BUBBLE_SPEED * speedModifier * Gdx.graphics.getDeltaTime();
+    }
+
+    private void moveUp() {
+        y += MyGdxGame.BUBBLE_SPEED * speedModifier * Gdx.graphics.getDeltaTime();
+    }
+
+    private void moveDown() {
+        y -= MyGdxGame.BUBBLE_SPEED * speedModifier * Gdx.graphics.getDeltaTime();
+    }
+
+    private void moveLeft() {
+        x -= MyGdxGame.BUBBLE_SPEED * speedModifier * Gdx.graphics.getDeltaTime();
     }
 }

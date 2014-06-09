@@ -11,7 +11,7 @@ import java.util.Random;
  */
 public enum Direction {
 
-    UP, RIGHT, DOWN, LEFT;
+    UP, RIGHT, DOWN, LEFT, UP_RIGHT, UP_LEFT, DOWN_RIGHT, DOWN_LEFT;
 
     private static final List<Direction> VALUES = Collections.unmodifiableList(Arrays.asList(values()));
     private static final int SIZE = VALUES.size();

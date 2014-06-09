@@ -20,7 +20,7 @@ public class MyGdxGame implements ApplicationListener {
     public static final String TITLE = "Bubble Game";
     public static final int WIDTH = 800;
     public static final int HEIGHT = 480;
-    private final int BUBBLE_SPEED = 200;
+    public static final int BUBBLE_SPEED = 200;
     private static final int MOUSE_SIZE = 3;
 
     private OrthographicCamera camera;
@@ -84,7 +84,7 @@ public class MyGdxGame implements ApplicationListener {
 
         //Bubble Movement
         for (Bubble bubble : bubbles) {
-            moveBubble(bubble);
+            bubble.move();
             if (!inBounds(bubble)) {
                 score--;
                 bubbles.removeValue(bubble, true);
@@ -106,27 +106,10 @@ public class MyGdxGame implements ApplicationListener {
     }
 
     private boolean inBounds(Rectangle r) {
-        return r.x >= 0 &&
-                r.y >= 0 &&
-                r.x + (.5 * r.width) <= WIDTH &&
-                r.y + (.5 * r.height) <= HEIGHT;
-    }
-
-    private void moveBubble(Bubble b) {
-        switch (b.movementDirection) {
-            case UP:
-                b.y += BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
-            case RIGHT:
-                b.x += BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
-            case LEFT:
-                b.x -= BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
-            case DOWN:
-                b.y -= BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
-        }
+        return r.x >= 0
+                && r.y >= 0
+                && r.x + (.5 * r.width) <= WIDTH
+                && r.y + (.5 * r.height) <= HEIGHT;
     }
 
     private void spawnBubble() {
