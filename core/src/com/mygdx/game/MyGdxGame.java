@@ -9,9 +9,12 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
 
@@ -32,12 +35,17 @@ public class MyGdxGame implements ApplicationListener {
     private Sound dropSound;
     private Music rainMusic;
 
+    private BodyDef newBubble;
+    private World world;
+
     private Array<Bubble> bubbles;
     private long lastDropTime;
     private int score;
 
     @Override
     public void create() {
+        World world = new World(new Vector2(0, -10), true);
+
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
 
@@ -113,34 +121,19 @@ public class MyGdxGame implements ApplicationListener {
     }
 
     private void spawnBubble() {
-        Bubble bubble = new Bubble(Direction.randomDirection());
+        //Bubble bubble = new Bubble();
         //Bubble bubble = new Bubble(Direction.DOWN);
 
-        float mod = MathUtils.random(0.2f, 2f);
+        BodyDef bubble = new BodyDef();
+        bubble.type = BodyDef.BodyType.DynamicBody;
+        Body bubbleBody = world.createBody(bubble);
 
-        bubble.speedModifier = mod;
-        bubble.setSizeByModifier(mod);
+        bubble.position.set(200, 200);
 
-        switch (bubble.movementDirection) {
-            case UP:
-                bubble.x = MathUtils.random(0, WIDTH - bubble.size);
-                bubble.y = 0;
-                break;
-            case RIGHT:
-                bubble.x = 0;
-                bubble.y = MathUtils.random(0, HEIGHT - bubble.size);
-                break;
-            case LEFT:
-                bubble.x = WIDTH - bubble.size;
-                bubble.y = MathUtils.random(0, HEIGHT - bubble.size);
-                break;
-            case DOWN:
-                bubble.x = MathUtils.random(0, WIDTH - bubble.size);
-                bubble.y = HEIGHT - bubble.size;
-                break;
-        }
-
-        bubbles.add(bubble);
+//        float mod = MathUtils.random(0.2f, 2f);
+//        bubble.speedModifier = mod;
+//        bubble.setSizeByModifier(mod);
+        //bubbles.add(bubble);
         lastDropTime = TimeUtils.nanoTime();
     }
 

@@ -9,12 +9,11 @@ import com.badlogic.gdx.math.Rectangle;
  */
 public class Bubble extends Rectangle {
 
-    public Direction movementDirection;
     public float speedModifier;
     public float size;
 
-    public Bubble(Direction d) {
-        movementDirection = d;
+    public Bubble() {
+
     }
 
     private final int BASE_SIZE = 64;
@@ -26,37 +25,7 @@ public class Bubble extends Rectangle {
     }
 
     public void move() {
-        switch (movementDirection) {
-            case UP:
-                moveUp();
-                break;
-            case RIGHT:
-                moveRight();
-                break;
-            case LEFT:
-                moveLeft();
-                break;
-            case DOWN:
-                moveDown();
-                break;
-            case UP_RIGHT:
-                moveUp();
-                moveRight();
-                break;
-            case UP_LEFT:
-                moveUp();
-                moveLeft();
-                break;
-            case DOWN_LEFT:
-                moveDown();
-                moveLeft();
-                break;
-            case DOWN_RIGHT:
-                moveDown();
-                moveRight();
-                break;
 
-        }
     }
 
     private void moveRight() {
