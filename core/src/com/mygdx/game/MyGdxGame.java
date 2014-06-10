@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -92,6 +91,10 @@ public class MyGdxGame implements ApplicationListener {
                 sprite.setRotation(body.getAngle() * MathUtils.radiansToDegrees);
                 sprite.draw(batch);
             }
+            if (!inBounds(body.getPosition().x, body.getPosition().y)) {
+                deleteBubble(body);
+                score--;
+            }
         }
 
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -146,11 +149,11 @@ public class MyGdxGame implements ApplicationListener {
         world.destroyBody(b);
     }
 
-    private boolean inBounds(Rectangle r) {
-        return r.x >= 0 &&
-                r.y >= 0 &&
-                r.x + (.5 * r.width) <= WIDTH &&
-                r.y + (.5 * r.height) <= HEIGHT;
+    private boolean inBounds(float x, float y) {
+        return x >= 0 &&
+                y >= 0 &&
+                x <= WIDTH &&
+                y <= HEIGHT;
     }
 
     private void spawnBubble() {
