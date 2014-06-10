@@ -11,9 +11,13 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -44,7 +48,7 @@ public class MyGdxGame implements ApplicationListener {
 
     @Override
     public void create() {
-        World world = new World(new Vector2(0, -10), true);
+        world = new World(new Vector2(0, -10), true);
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
@@ -73,6 +77,9 @@ public class MyGdxGame implements ApplicationListener {
 
         camera.update();
 
+        Box2DDebugRenderer debugRenderer = new Box2DDebugRenderer();
+        debugRenderer.render(world, camera.combined);
+
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         batch.draw(backgroundTexture, 0, 0, 800, 480);
@@ -89,46 +96,71 @@ public class MyGdxGame implements ApplicationListener {
         if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
             spawnBubble();
         }
+        /*
+         //Bubble Movement
+         for (Bubble bubble : bubbles) {
+         bubble.move();
+         if (!inBounds(bubble)) {
+         score--;
+         bubbles.removeValue(bubble, true);
+         }
+         }*/
+        /*
+         //click handling
+         if (Gdx.input.isTouched()) {
+         Vector3 touchPos = new Vector3();
+         touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+         camera.unproject(touchPos);
+         for (Bubble bubble : bubbles) {
+         if (bubble.overlaps(new Rectangle(touchPos.x, touchPos.y, MOUSE_SIZE, MOUSE_SIZE))) {
+         score++;
+         bubbles.removeValue(bubble, true);
+         }
+         }
+         }*/
 
-        //Bubble Movement
-        for (Bubble bubble : bubbles) {
-            bubble.move();
-            if (!inBounds(bubble)) {
-                score--;
-                bubbles.removeValue(bubble, true);
-            }
-        }
-
-        //click handling
-        if (Gdx.input.isTouched()) {
-            Vector3 touchPos = new Vector3();
-            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camera.unproject(touchPos);
-            for (Bubble bubble : bubbles) {
-                if (bubble.overlaps(new Rectangle(touchPos.x, touchPos.y, MOUSE_SIZE, MOUSE_SIZE))) {
-                    score++;
-                    bubbles.removeValue(bubble, true);
-                }
-            }
-        }
+        world.step(1 / 60f, 6, 2);
     }
 
     private boolean inBounds(Rectangle r) {
-        return r.x >= 0
-                && r.y >= 0
-                && r.x + (.5 * r.width) <= WIDTH
-                && r.y + (.5 * r.height) <= HEIGHT;
+        return r.x >= 0 &&
+                r.y >= 0 &&
+                r.x + (.5 * r.width) <= WIDTH &&
+                r.y + (.5 * r.height) <= HEIGHT;
     }
 
     private void spawnBubble() {
+        System.out.println("fdsa");
+
         //Bubble bubble = new Bubble();
         //Bubble bubble = new Bubble(Direction.DOWN);
+        // First we create a body definition
+        BodyDef bodyDef = new BodyDef();
+        // We set our body to dynamic, for something like ground which doesn't move we would set it to StaticBody
+        bodyDef.type = BodyType.DynamicBody;
+        // Set our body's starting position in the world
+        bodyDef.position.set(100, 300);
 
-        BodyDef bubble = new BodyDef();
-        bubble.type = BodyDef.BodyType.DynamicBody;
-        Body bubbleBody = world.createBody(bubble);
+        // Create our body in the world using our body definition
+        Body body = world.createBody(bodyDef);
 
-        bubble.position.set(200, 200);
+        // Create a circle shape and set its radius to 6
+        CircleShape circle = new CircleShape();
+        circle.setRadius(6f);
+
+        // Create a fixture definition to apply our shape to
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = circle;
+        fixtureDef.density = 0.5f;
+        fixtureDef.friction = 0.4f;
+        fixtureDef.restitution = 0.6f; // Make it bounce a little bit
+
+        // Create our fixture and attach it to the body
+        Fixture fixture = body.createFixture(fixtureDef);
+
+        // Remember to dispose of any shapes after you're done with them!
+        // BodyDef and FixtureDef don't need disposing, but shapes do.
+        circle.dispose();
 
 //        float mod = MathUtils.random(0.2f, 2f);
 //        bubble.speedModifier = mod;
