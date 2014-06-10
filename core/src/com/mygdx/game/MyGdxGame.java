@@ -45,7 +45,7 @@ public class MyGdxGame implements ApplicationListener {
         bubbleImage = new Texture("bubble.png");
 
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
-        rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
+        rainMusic = Gdx.audio.newMusic(Gdx.files.internal("RunAmok.mp3"));
         rainMusic.setLooping(true);
         rainMusic.play();
 
