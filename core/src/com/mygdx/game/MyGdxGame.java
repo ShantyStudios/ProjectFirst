@@ -39,8 +39,8 @@ public class MyGdxGame implements ApplicationListener {
     private Sound dropSound;
     private Music rainMusic;
 
-    private BodyDef newBubble;
     private World world;
+    private Box2DDebugRenderer debugRenderer;
 
     private Array<Bubble> bubbles;
     private long lastDropTime;
@@ -75,9 +75,8 @@ public class MyGdxGame implements ApplicationListener {
         Gdx.gl.glClearColor(0, 0, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        camera.update();
-
-        Box2DDebugRenderer debugRenderer = new Box2DDebugRenderer();
+//        camera.update();
+        debugRenderer = new Box2DDebugRenderer();
         debugRenderer.render(world, camera.combined);
 
         batch.setProjectionMatrix(camera.combined);
@@ -119,6 +118,9 @@ public class MyGdxGame implements ApplicationListener {
          }
          }*/
 
+        debugRenderer = new Box2DDebugRenderer();
+        debugRenderer.render(world, camera.combined);
+
         world.step(1 / 60f, 6, 2);
     }
 
@@ -130,7 +132,6 @@ public class MyGdxGame implements ApplicationListener {
     }
 
     private void spawnBubble() {
-        System.out.println("fdsa");
 
         //Bubble bubble = new Bubble();
         //Bubble bubble = new Bubble(Direction.DOWN);
@@ -192,5 +193,6 @@ public class MyGdxGame implements ApplicationListener {
         bubbleImage.dispose();
         dropSound.dispose();
         rainMusic.dispose();
+        world.dispose();
     }
 }
