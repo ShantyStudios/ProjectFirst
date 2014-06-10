@@ -8,9 +8,12 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
@@ -34,7 +37,7 @@ public class MyGdxGame implements ApplicationListener {
     private SpriteBatch batch;
     private BitmapFont font;
 
-    private Texture bubbleImage;
+    private Sprite mainBubbleSprite;
     private Texture backgroundTexture;
     private Sound dropSound;
     private Music rainMusic;
@@ -42,31 +45,31 @@ public class MyGdxGame implements ApplicationListener {
     private World world;
     private Box2DDebugRenderer debugRenderer;
 
-    private Array<Bubble> bubbles;
+    private Array<Body> bubbles;
     private long lastDropTime;
     private int score;
 
     @Override
     public void create() {
-        world = new World(new Vector2(0, -10), true);
+        world = new World(new Vector2(0, -20), true);
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
 
         backgroundTexture = new Texture("background.jpg");
-        bubbleImage = new Texture("bubble.png");
+        mainBubbleSprite = new Sprite(new Texture("bubble.png"));
 
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
         rainMusic = Gdx.audio.newMusic(Gdx.files.internal("rain.mp3"));
         rainMusic.setLooping(true);
-        rainMusic.play();
+        //rainMusic.play();
 
         batch = new SpriteBatch();
         font = new BitmapFont();
 
         score = 0;
 
-        bubbles = new Array<Bubble>();
+        bubbles = new Array<Body>();
         spawnBubble();
     }
 
@@ -76,23 +79,31 @@ public class MyGdxGame implements ApplicationListener {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 //        camera.update();
-        debugRenderer = new Box2DDebugRenderer();
-        debugRenderer.render(world, camera.combined);
-
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         batch.draw(backgroundTexture, 0, 0, 800, 480);
 
+        Array<Body> tmpBodys = new Array<Body>();
+        //world.getBodies(bubbles);
+        for (Body body : bubbles) {
+            if (body.getUserData() != null && body.getUserData() instanceof Sprite) {
+                Sprite sprite = (Sprite) body.getUserData();
+                sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+                sprite.setRotation(body.getAngle() * MathUtils.radiansToDegrees);
+                sprite.draw(batch);
+            }
+        }
+
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
         font.draw(batch, "Score: " + score, 700, 100); // player score
 
-        for (Bubble bubble : bubbles) {
-            batch.draw(bubbleImage, bubble.x, bubble.y, bubble.size, bubble.size);// draws bubbles
-        }
+        /*for (Bubble bubble : bubbles) {
+         batch.draw(bubbleImage, bubble.x, bubble.y, bubble.size, bubble.size);// draws bubbles
+         }*/
         batch.end();
 
         // bubble rate droper
-        if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
+        if (TimeUtils.nanoTime() - lastDropTime > 10000000) {
             spawnBubble();
         }
         /*
@@ -104,24 +115,35 @@ public class MyGdxGame implements ApplicationListener {
          bubbles.removeValue(bubble, true);
          }
          }*/
-        /*
-         //click handling
-         if (Gdx.input.isTouched()) {
-         Vector3 touchPos = new Vector3();
-         touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-         camera.unproject(touchPos);
-         for (Bubble bubble : bubbles) {
-         if (bubble.overlaps(new Rectangle(touchPos.x, touchPos.y, MOUSE_SIZE, MOUSE_SIZE))) {
-         score++;
-         bubbles.removeValue(bubble, true);
-         }
-         }
-         }*/
+
+        //click handling
+        if (Gdx.input.isTouched()) {
+            Vector3 touchPos = new Vector3();
+            touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            camera.unproject(touchPos);
+
+            for (Body bubble : bubbles) {
+                for (Fixture fixture : bubble.getFixtureList()) {
+                    if (fixture.testPoint(touchPos.x, touchPos.y)) {
+                        score++;
+                        deleteBubble(bubble);
+                    }
+                }
+            }
+        }
 
         debugRenderer = new Box2DDebugRenderer();
         debugRenderer.render(world, camera.combined);
 
         world.step(1 / 60f, 6, 2);
+    }
+
+    private void deleteBubble(Body b) {
+        bubbles.removeValue(b, true);
+//        for (Fixture f : b.getFixtureList()) {
+//            b.destroyFixture(f);
+//        }
+        world.destroyBody(b);
     }
 
     private boolean inBounds(Rectangle r) {
@@ -140,14 +162,14 @@ public class MyGdxGame implements ApplicationListener {
         // We set our body to dynamic, for something like ground which doesn't move we would set it to StaticBody
         bodyDef.type = BodyType.DynamicBody;
         // Set our body's starting position in the world
-        bodyDef.position.set(100, 300);
+        bodyDef.position.set(400, 400);
 
         // Create our body in the world using our body definition
         Body body = world.createBody(bodyDef);
 
         // Create a circle shape and set its radius to 6
         CircleShape circle = new CircleShape();
-        circle.setRadius(6f);
+        circle.setRadius(24f);
 
         // Create a fixture definition to apply our shape to
         FixtureDef fixtureDef = new FixtureDef();
@@ -159,6 +181,13 @@ public class MyGdxGame implements ApplicationListener {
         // Create our fixture and attach it to the body
         Fixture fixture = body.createFixture(fixtureDef);
 
+        Sprite bubbleSprite = new Sprite(mainBubbleSprite);
+        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//I have no idea why *2, but it makes the size better
+        bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);
+        body.setUserData(bubbleSprite);
+
+        body.setLinearVelocity(MathUtils.random(0.2f, 2f), MathUtils.random(0.2f, 2f));
+
         // Remember to dispose of any shapes after you're done with them!
         // BodyDef and FixtureDef don't need disposing, but shapes do.
         circle.dispose();
@@ -166,7 +195,7 @@ public class MyGdxGame implements ApplicationListener {
 //        float mod = MathUtils.random(0.2f, 2f);
 //        bubble.speedModifier = mod;
 //        bubble.setSizeByModifier(mod);
-        //bubbles.add(bubble);
+        bubbles.add(body);
         lastDropTime = TimeUtils.nanoTime();
     }
 
@@ -190,9 +219,9 @@ public class MyGdxGame implements ApplicationListener {
 
     @Override
     public void dispose() {
-        bubbleImage.dispose();
         dropSound.dispose();
         rainMusic.dispose();
         world.dispose();
+        mainBubbleSprite.getTexture().dispose();
     }
 }
