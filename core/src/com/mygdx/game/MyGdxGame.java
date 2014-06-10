@@ -23,6 +23,15 @@ public class MyGdxGame implements ApplicationListener {
     private final int BUBBLE_SPEED = 200;
     private static final int MOUSE_SIZE = 3;
 
+    private static final String[] MUSICS = {//Todo generante from /assets/sound/music folder instead of listing
+        "Run Amok.mp3",
+        "The Builder.mp3",
+        "Monkeys Spinning Monkeys.mp3",
+        "Fun in a Bottle.mp3",
+        "Pamgaea.mp3",
+        "Jaunty Gumption.mp3"
+    };
+
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private BitmapFont font;
@@ -30,7 +39,7 @@ public class MyGdxGame implements ApplicationListener {
     private Texture bubbleImage;
     private Texture backgroundTexture;
     private Sound dropSound;
-    private Music rainMusic;
+    private Music backgroundMusic;
 
     private Array<Bubble> bubbles;
     private long lastDropTime;
@@ -44,10 +53,12 @@ public class MyGdxGame implements ApplicationListener {
         backgroundTexture = new Texture("background.jpg");
         bubbleImage = new Texture("bubble.png");
 
-        dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.wav"));
-        rainMusic = Gdx.audio.newMusic(Gdx.files.internal("RunAmok.mp3"));
-        rainMusic.setLooping(true);
-        rainMusic.play();
+        dropSound = Gdx.audio.newSound(Gdx.files.internal("Sound/drop.wav"));
+
+        String musicString = "Sound/Music/" + MUSICS[MathUtils.random(0, MUSICS.length - 1)];
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(musicString));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.play();
 
         batch = new SpriteBatch();
         font = new BitmapFont();
@@ -183,6 +194,6 @@ public class MyGdxGame implements ApplicationListener {
     public void dispose() {
         bubbleImage.dispose();
         dropSound.dispose();
-        rainMusic.dispose();
+        backgroundMusic.dispose();
     }
 }
