@@ -190,8 +190,9 @@ public class MyGdxGame implements ApplicationListener {
         bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);
         body.setUserData(bubbleSprite);
 
-        float speed = random * random * random;
-        body.setLinearVelocity(speed * MathUtils.cos(body.getAngle()), speed * MathUtils.sin(body.getAngle()));
+        float cosine = MathUtils.cos(body.getAngle());
+        float sine = MathUtils.sin(body.getAngle());
+        body.setLinearVelocity(random * random * cosine * cosine * cosine, random * random * sine * sine * sine);
 
         circle.dispose();
 
