@@ -95,7 +95,10 @@ public class MyGdxGame implements ApplicationListener {
             if (!inBounds(body.getPosition().x, body.getPosition().y)) {
                 deleteBubble(body);
                 score--;
+                continue;
             }
+
+            body.setLinearVelocity(body.getLinearVelocity().x * 4f, body.getLinearVelocity().y * 4f);
         }
 
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -186,13 +189,13 @@ public class MyGdxGame implements ApplicationListener {
 
         //Sprite setup
         Sprite bubbleSprite = new Sprite(mainBubbleSprite);
-        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//I have no idea why *2, but it makes the size better
+        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//*2 for radius->diameter
         bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);
         body.setUserData(bubbleSprite);
 
         float cosine = MathUtils.cos(body.getAngle());
         float sine = MathUtils.sin(body.getAngle());
-        body.setLinearVelocity(random * random * cosine * cosine * cosine, random * random * sine * sine * sine);
+        body.setLinearVelocity(random * random * cosine * cosine * cosine, random * random * sine * sine * sine);//size ^2 * angle ^3
 
         circle.dispose();
 
