@@ -2,6 +2,7 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
@@ -22,7 +23,6 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.TimeUtils;
 
 public class MyGdxGame implements ApplicationListener {
 
@@ -31,7 +31,6 @@ public class MyGdxGame implements ApplicationListener {
     public static final int WIDTH = 800;
     public static final int HEIGHT = 480;
     public static final int BUBBLE_SPEED = 200;
-    private static final int MOUSE_SIZE = 3;
 
     private OrthographicCamera camera;
     private SpriteBatch batch;
@@ -48,7 +47,8 @@ public class MyGdxGame implements ApplicationListener {
     private Array<Body> bubbles;
 
     //Game elements
-    private long lastDropTime;
+    private double bubbleTime;
+    private double bubbleTimeStep;
     private int score;
 
     @Override
@@ -70,6 +70,7 @@ public class MyGdxGame implements ApplicationListener {
         font = new BitmapFont();
 
         score = 0;
+        bubbleTime = 0;
 
         bubbles = new Array<Body>();
         spawnBubble();
@@ -106,13 +107,17 @@ public class MyGdxGame implements ApplicationListener {
 
         batch.end();
 
-        //Timed bubble spawning
-        if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
+        //Debug bubble spawning
+        if (Gdx.input.isKeyPressed(Keys.SPACE)) {
             spawnBubble();
         }
-        /*if (Gdx.input.isKeyPressed(Keys.SPACE)) {
-         spawnBubble();
-         }*/
+        //Debug score adjust
+        if (Gdx.input.isKeyPressed(Keys.UP)) {
+            score++;
+        }
+        if (Gdx.input.isKeyPressed(Keys.DOWN)) {
+            score--;
+        }
 
         //Click handling
         if (Gdx.input.isTouched()) {
@@ -130,8 +135,35 @@ public class MyGdxGame implements ApplicationListener {
             }
         }
 
+        //Timed bubble spawning
+        if (bubbleTime > bubbles.size) {
+            spawnBubble();
+        }
+
         debugRenderer = new Box2DDebugRenderer();
         debugRenderer.render(world, camera.combined);
+
+        /*
+         LOGISTIC BUBBLE SPAWNING
+         https://www.desmos.com/calculator/xcrski6uif
+
+         When score is low, slow spawning. When score is high, fast spawning.
+         Also is kinda nice because a bubble will always spawn if there are no bubbles on board
+         */
+        double x = score;
+        double var1 = 100;//Carrying capacity. Max number of bubbles
+        double var2 = -5;//kinda controls when the graph starts getting steep
+        double var3 = .015;//Controls steepness of graph, max rate of spawn
+
+        bubbleTimeStep = var1 / (1 + Math.pow(Math.E, -(var2 + (var3 * x))));
+
+        bubbleTime += bubbleTimeStep * (1 / 60f);
+
+        batch.begin();
+        font.draw(batch, "bubbleTimeStep: " + bubbleTimeStep, 0, 45);
+        font.draw(batch, "bubbleTime: " + bubbleTime, 0, 30);
+        font.draw(batch, "NumBubbles: " + bubbles.size, 0, 15);
+        batch.end();
 
         world.step(1 / 60f, 6, 2);
     }
@@ -174,7 +206,7 @@ public class MyGdxGame implements ApplicationListener {
 
         // Create a circle shape and set its radius to 6
         CircleShape circle = new CircleShape();
-        Float random = MathUtils.random(5f, 50f);
+        Float random = MathUtils.random(10f, 50f);
         circle.setRadius(random);
 
         // Create a fixture definition to apply our shape to
@@ -200,7 +232,8 @@ public class MyGdxGame implements ApplicationListener {
         circle.dispose();
 
         bubbles.add(body);
-        lastDropTime = TimeUtils.nanoTime();
+
+        bubbleTime = 0;
     }
 
     @Override
