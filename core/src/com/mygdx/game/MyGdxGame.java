@@ -154,26 +154,6 @@ public class MyGdxGame implements ApplicationListener {
         // Create our body in the world using our body definition
         Body body = world.createBody(bodyDef);
 
-        // Create a circle shape and set its radius to 6
-        CircleShape circle = new CircleShape();
-        circle.setRadius(24f);
-
-        // Create a fixture definition to apply our shape to
-        FixtureDef fixtureDef = new FixtureDef();
-        fixtureDef.shape = circle;
-        fixtureDef.density = 0.5f;
-        fixtureDef.friction = 0.4f;
-        fixtureDef.restitution = 0.6f;
-
-        // Create our fixture and attach it to the body
-        Fixture fixture = body.createFixture(fixtureDef);
-
-        //Sprite setup
-        Sprite bubbleSprite = new Sprite(mainBubbleSprite);
-        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//I have no idea why *2, but it makes the size better
-        bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);
-        body.setUserData(bubbleSprite);
-
         //Angle and position
         float angle = MathUtils.random(0, 2 * 3.1415926535f);
         /*
@@ -188,7 +168,29 @@ public class MyGdxGame implements ApplicationListener {
 
         body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
         //body.setAngularVelocity(MathUtils.random(.1f, 4f));
-        float speed = 50;
+
+        // Create a circle shape and set its radius to 6
+        CircleShape circle = new CircleShape();
+        Float random = MathUtils.random(5f, 50f);
+        circle.setRadius(random);
+
+        // Create a fixture definition to apply our shape to
+        FixtureDef fixtureDef = new FixtureDef();
+        fixtureDef.shape = circle;
+        fixtureDef.density = 0.1f;
+        fixtureDef.friction = 0.1f;
+        fixtureDef.restitution = 0.6f;
+
+        // Create our fixture and attach it to the body
+        Fixture fixture = body.createFixture(fixtureDef);
+
+        //Sprite setup
+        Sprite bubbleSprite = new Sprite(mainBubbleSprite);
+        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//I have no idea why *2, but it makes the size better
+        bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);
+        body.setUserData(bubbleSprite);
+
+        float speed = random * random * random;
         body.setLinearVelocity(speed * MathUtils.cos(body.getAngle()), speed * MathUtils.sin(body.getAngle()));
 
         circle.dispose();
