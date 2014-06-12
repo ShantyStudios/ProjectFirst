@@ -46,6 +46,10 @@ public class MyGdxGame implements ApplicationListener {
     private Box2DDebugRenderer debugRenderer;
     private Array<Body> bubbles;
 
+    private BodyDef bodyDef;
+    private CircleShape circle;
+    private FixtureDef fixtureDef;
+
     //Game elements
     private double bubbleTime;
     private double bubbleTimeStep;
@@ -54,6 +58,18 @@ public class MyGdxGame implements ApplicationListener {
     @Override
     public void create() {
         world = new World(new Vector2(0, 0), true);
+
+        //Bubble physics setup
+        bodyDef = new BodyDef();
+        bodyDef.type = BodyType.DynamicBody;
+
+        fixtureDef = new FixtureDef();
+        fixtureDef.density = 0.1f;
+        fixtureDef.friction = 0.1f;
+        fixtureDef.restitution = 0.6f;
+        //End bubble physics setup
+
+        debugRenderer = new Box2DDebugRenderer();
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
@@ -140,7 +156,6 @@ public class MyGdxGame implements ApplicationListener {
             spawnBubble();
         }
 
-        debugRenderer = new Box2DDebugRenderer();
         debugRenderer.render(world, camera.combined);
 
         /*
@@ -157,7 +172,7 @@ public class MyGdxGame implements ApplicationListener {
 
         bubbleTimeStep = var1 / (1 + Math.pow(Math.E, -(var2 + (var3 * x))));
 
-        bubbleTime += bubbleTimeStep * (1 / 60f);
+        bubbleTime += bubbleTimeStep * Gdx.graphics.getDeltaTime();
 
         batch.begin();
         font.draw(batch, "bubbleTimeStep: " + bubbleTimeStep, 0, 45);
@@ -171,6 +186,8 @@ public class MyGdxGame implements ApplicationListener {
     private void deleteBubble(Body b) {
         bubbles.removeValue(b, true);
         world.destroyBody(b);
+        b.setUserData(null);
+        b = null;
     }
 
     private boolean inBounds(float x, float y) {
@@ -182,11 +199,8 @@ public class MyGdxGame implements ApplicationListener {
 
     private void spawnBubble() {
 
-        // First we create a body definition
-        BodyDef bodyDef = new BodyDef();
-        bodyDef.type = BodyType.DynamicBody;
+        circle = new CircleShape();
 
-        // Create our body in the world using our body definition
         Body body = world.createBody(bodyDef);
 
         //Angle and position
@@ -204,20 +218,11 @@ public class MyGdxGame implements ApplicationListener {
         body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
         //body.setAngularVelocity(MathUtils.random(.1f, 4f));
 
-        // Create a circle shape and set its radius to 6
-        CircleShape circle = new CircleShape();
         Float random = MathUtils.random(10f, 50f);
         circle.setRadius(random);
 
-        // Create a fixture definition to apply our shape to
-        FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = circle;
-        fixtureDef.density = 0.1f;
-        fixtureDef.friction = 0.1f;
-        fixtureDef.restitution = 0.6f;
-
-        // Create our fixture and attach it to the body
-        Fixture fixture = body.createFixture(fixtureDef);
+        body.createFixture(fixtureDef);
 
         //Sprite setup
         Sprite bubbleSprite = new Sprite(mainBubbleSprite);
