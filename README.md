@@ -10,10 +10,7 @@ Use [this](http://daringfireball.net/projects/markdown/dingus) and [this](http:/
 
 #### Physics
 
-* Random Velocity/acceleration  (DIRECTION)
-* Starting position
-* Tweak settings for good collisions and whatnots
-
+* Random Velocity/acceleration 
 
 #### Screens
 
