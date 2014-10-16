@@ -104,8 +104,8 @@ public class MyGdxGame implements ApplicationListener {
 
         bubbles = new Array<Body>();
 
-        //And make the first bubble to start the game
-        spawnBubble();
+        //And make the first bubbles to start the game
+        spawnBubbles(3);
     }
 
     @Override
