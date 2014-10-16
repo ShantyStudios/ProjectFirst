@@ -171,7 +171,7 @@ public class MyGdxGame implements ApplicationListener {
 
         //Timed bubble spawning
         if (bubbleTime > bubbles.size) {
-            spawnBubble();
+            spawnBubbles(3);//Spawn 3 bubbles at a time
         }
 
         debugRenderer.render(world, camera.combined);
@@ -223,6 +223,12 @@ public class MyGdxGame implements ApplicationListener {
                 y <= HEIGHT;
     }
 
+    private void spawnBubbles(int n) {
+        for (int i = 1; i <= n; i++) {
+            spawnBubble();
+        }
+    }
+
     private void spawnBubble() {
 
         circle = new CircleShape();
@@ -230,7 +236,7 @@ public class MyGdxGame implements ApplicationListener {
         Body body = world.createBody(bodyDef);
 
         //Angle and position
-        float angle = MathUtils.random(0, 2 * 3.1415926535f);//Random angle from 0 to 2pi
+        float angle = MathUtils.random(3.926990817f, 5.497787144f);//Random angle from 225 deg to 315 deg
 
         //From the angle the bubble is facing, the position is set so it will travel to the center
         body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
