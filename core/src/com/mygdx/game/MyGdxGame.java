@@ -2,26 +2,35 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.TimeUtils;
 
 public class MyGdxGame implements ApplicationListener {
 
+    //Constants
     public static final String TITLE = "Bubble Game";
     public static final int WIDTH = 800;
     public static final int HEIGHT = 480;
-    private final int BUBBLE_SPEED = 200;
-    private static final int MOUSE_SIZE = 3;
+    public static final int BUBBLE_SPEED = 200;
 
     private static final String[] MUSICS = {//Todo generante from /assets/sound/music folder instead of listing
         "Run Amok.mp3",
@@ -36,22 +45,46 @@ public class MyGdxGame implements ApplicationListener {
     private SpriteBatch batch;
     private BitmapFont font;
 
-    private Texture bubbleImage;
+    private Sprite mainBubbleSprite;
     private Texture backgroundTexture;
     private Sound dropSound;
     private Music backgroundMusic;
 
-    private Array<Bubble> bubbles;
-    private long lastDropTime;
+    //Physics
+    private World world;
+    private Box2DDebugRenderer debugRenderer;
+    private Array<Body> bubbles;
+
+    private BodyDef bodyDef;
+    private CircleShape circle;
+    private FixtureDef fixtureDef;
+
+    //Game elements
+    private double bubbleTime;
+    private double bubbleTimeStep;
     private int score;
 
     @Override
     public void create() {
+        world = new World(new Vector2(0, 0), true);
+
+        //Bubble physics setup
+        bodyDef = new BodyDef();
+        bodyDef.type = BodyType.DynamicBody;
+
+        fixtureDef = new FixtureDef();
+        fixtureDef.density = 0.1f;
+        fixtureDef.friction = 0.1f;
+        fixtureDef.restitution = 0.6f;
+        //End bubble physics setup
+
+        debugRenderer = new Box2DDebugRenderer();
+
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
 
         backgroundTexture = new Texture("background.jpg");
-        bubbleImage = new Texture("bubble.png");
+        mainBubbleSprite = new Sprite(new Texture("bubble.png"));
 
         dropSound = Gdx.audio.newSound(Gdx.files.internal("Sound/drop.wav"));
 
@@ -64,8 +97,9 @@ public class MyGdxGame implements ApplicationListener {
         font = new BitmapFont();
 
         score = 0;
+        bubbleTime = 0;
 
-        bubbles = new Array<Bubble>();
+        bubbles = new Array<Body>();
         spawnBubble();
     }
 
@@ -74,102 +108,148 @@ public class MyGdxGame implements ApplicationListener {
         Gdx.gl.glClearColor(0, 0, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        camera.update();
-
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(backgroundTexture, 0, 0, 800, 480);
+        batch.draw(backgroundTexture, 0, 0, 800, 480);//Draw this before bubbles
+
+        //Draw the bubbles
+        for (Body body : bubbles) {
+            if (body.getUserData() != null && body.getUserData() instanceof Sprite) {
+                Sprite sprite = (Sprite) body.getUserData();
+                sprite.setPosition(body.getPosition().x - sprite.getWidth() / 2, body.getPosition().y - sprite.getHeight() / 2);
+                sprite.setRotation(body.getAngle() * MathUtils.radiansToDegrees);
+                sprite.draw(batch);
+            }
+            if (!inBounds(body.getPosition().x, body.getPosition().y)) {
+                deleteBubble(body);
+                score--;
+                continue;
+            }
+
+            body.setLinearVelocity(body.getLinearVelocity().x * 4f, body.getLinearVelocity().y * 4f);
+        }
 
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        font.draw(batch, "Score: " + score, 700, 100); // player score
+        font.draw(batch, "Score: " + score, 700, 100);//Player score
 
-        for (Bubble bubble : bubbles) {
-            batch.draw(bubbleImage, bubble.x, bubble.y, bubble.size, bubble.size);// draws bubbles
-        }
         batch.end();
 
-        // bubble rate droper
-        if (TimeUtils.nanoTime() - lastDropTime > 1000000000) {
+        //Debug bubble spawning
+        if (Gdx.input.isKeyPressed(Keys.SPACE)) {
             spawnBubble();
         }
-
-        //Bubble Movement
-        for (Bubble bubble : bubbles) {
-            moveBubble(bubble);
-            if (!inBounds(bubble)) {
-                score--;
-                bubbles.removeValue(bubble, true);
-            }
+        //Debug score adjust
+        if (Gdx.input.isKeyPressed(Keys.UP)) {
+            score++;
+        }
+        if (Gdx.input.isKeyPressed(Keys.DOWN)) {
+            score--;
         }
 
-        //click handling
+        //Click handling
         if (Gdx.input.isTouched()) {
             Vector3 touchPos = new Vector3();
             touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             camera.unproject(touchPos);
-            for (Bubble bubble : bubbles) {
-                if (bubble.overlaps(new Rectangle(touchPos.x, touchPos.y, MOUSE_SIZE, MOUSE_SIZE))) {
-                    score++;
-                    bubbles.removeValue(bubble, true);
+
+            for (Body bubble : bubbles) {
+                for (Fixture fixture : bubble.getFixtureList()) {
+                    if (fixture.testPoint(touchPos.x, touchPos.y)) {
+                        score++;
+                        deleteBubble(bubble);
+                    }
                 }
             }
         }
-    }
 
-    private boolean inBounds(Rectangle r) {
-        return r.x >= 0 &&
-                r.y >= 0 &&
-                r.x + (.5 * r.width) <= WIDTH &&
-                r.y + (.5 * r.height) <= HEIGHT;
-    }
-
-    private void moveBubble(Bubble b) {
-        switch (b.movementDirection) {
-            case UP:
-                b.y += BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
-            case RIGHT:
-                b.x += BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
-            case LEFT:
-                b.x -= BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
-            case DOWN:
-                b.y -= BUBBLE_SPEED * b.speedModifier * Gdx.graphics.getDeltaTime();
-                break;
+        //Timed bubble spawning
+        if (bubbleTime > bubbles.size) {
+            spawnBubble();
         }
+
+        debugRenderer.render(world, camera.combined);
+
+        /*
+         LOGISTIC BUBBLE SPAWNING
+         https://www.desmos.com/calculator/xcrski6uif
+
+         When score is low, slow spawning. When score is high, fast spawning.
+         Also is kinda nice because a bubble will always spawn if there are no bubbles on board
+         */
+        double x = score;
+        double var1 = 100;//Carrying capacity. Max number of bubbles
+        double var2 = -5;//kinda controls when the graph starts getting steep
+        double var3 = .015;//Controls steepness of graph, max rate of spawn
+
+        bubbleTimeStep = var1 / (1 + Math.pow(Math.E, -(var2 + (var3 * x))));
+
+        bubbleTime += bubbleTimeStep * Gdx.graphics.getDeltaTime();
+
+        batch.begin();
+        font.draw(batch, "bubbleTimeStep: " + bubbleTimeStep, 0, 45);
+        font.draw(batch, "bubbleTime: " + bubbleTime, 0, 30);
+        font.draw(batch, "NumBubbles: " + bubbles.size, 0, 15);
+        batch.end();
+
+        world.step(1 / 60f, 6, 2);
+    }
+
+    private void deleteBubble(Body b) {
+        bubbles.removeValue(b, true);
+        world.destroyBody(b);
+        b.setUserData(null);
+        b = null;
+    }
+
+    private boolean inBounds(float x, float y) {
+        return x >= 0 &&
+                y >= 0 &&
+                x <= WIDTH &&
+                y <= HEIGHT;
     }
 
     private void spawnBubble() {
-        Bubble bubble = new Bubble(Direction.randomDirection());
-        //Bubble bubble = new Bubble(Direction.DOWN);
 
-        float mod = MathUtils.random(0.2f, 2f);
+        circle = new CircleShape();
 
-        bubble.speedModifier = mod;
-        bubble.setSizeByModifier(mod);
+        Body body = world.createBody(bodyDef);
 
-        switch (bubble.movementDirection) {
-            case UP:
-                bubble.x = MathUtils.random(0, WIDTH - bubble.size);
-                bubble.y = 0;
-                break;
-            case RIGHT:
-                bubble.x = 0;
-                bubble.y = MathUtils.random(0, HEIGHT - bubble.size);
-                break;
-            case LEFT:
-                bubble.x = WIDTH - bubble.size;
-                bubble.y = MathUtils.random(0, HEIGHT - bubble.size);
-                break;
-            case DOWN:
-                bubble.x = MathUtils.random(0, WIDTH - bubble.size);
-                bubble.y = HEIGHT - bubble.size;
-                break;
-        }
+        //Angle and position
+        float angle = MathUtils.random(0, 2 * 3.1415926535f);
+        /*
+         System.out.println("Angle: " + angle);
+         System.out.println("cos: " + MathUtils.cos(angle));
+         System.out.println("sin: " + MathUtils.sin(angle));
+         System.out.println("cos * .5 width: " + MathUtils.cos(angle) * .5f * WIDTH);
+         System.out.println("sin * .5 height: " + MathUtils.sin(angle) * .5f * HEIGHT);
+         System.out.println("cos thing + .5width: " + ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)));
+         System.out.println("sin thing + .5height: " + ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)));
+         */
 
-        bubbles.add(bubble);
-        lastDropTime = TimeUtils.nanoTime();
+        body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
+        //body.setAngularVelocity(MathUtils.random(.1f, 4f));
+
+        Float random = MathUtils.random(10f, 50f);
+        circle.setRadius(random);
+
+        fixtureDef.shape = circle;
+        body.createFixture(fixtureDef);
+
+        //Sprite setup
+        Sprite bubbleSprite = new Sprite(mainBubbleSprite);
+        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//*2 for radius->diameter
+        bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);
+        body.setUserData(bubbleSprite);
+
+        float cosine = MathUtils.cos(body.getAngle());
+        float sine = MathUtils.sin(body.getAngle());
+        body.setLinearVelocity(random * random * cosine * cosine * cosine, random * random * sine * sine * sine);//size ^2 * angle ^3
+
+        circle.dispose();
+
+        bubbles.add(body);
+
+        bubbleTime = 0;
     }
 
     @Override
@@ -192,8 +272,11 @@ public class MyGdxGame implements ApplicationListener {
 
     @Override
     public void dispose() {
-        bubbleImage.dispose();
         dropSound.dispose();
+
+        world.dispose();
+        mainBubbleSprite.getTexture().dispose();
         backgroundMusic.dispose();
+
     }
 }
