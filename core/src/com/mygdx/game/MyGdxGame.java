@@ -40,6 +40,10 @@ public class MyGdxGame implements ApplicationListener {
         "Pamgaea.mp3",
         "Jaunty Gumption.mp3"
     };
+    
+    //Creates collision parts variables
+    private static final short BIT_ASTEROID = 2;
+    
 
     private OrthographicCamera camera;
     private SpriteBatch batch;
@@ -76,7 +80,7 @@ public class MyGdxGame implements ApplicationListener {
         fixtureDef.density = 0.1f;
         fixtureDef.friction = 0.1f;
         fixtureDef.restitution = 0.6f;
-        //End bubble physics setup
+        //End bubble physics setup      
 
         //This shows the wireframes of physics objects
         debugRenderer = new Box2DDebugRenderer();
@@ -129,7 +133,6 @@ public class MyGdxGame implements ApplicationListener {
             if (!inBounds(body.getPosition().x, body.getPosition().y)) {
                 //Remove bubbles outside the screen and decrease score
                 deleteBubble(body);
-                score--;
                 continue;
             }
             //I think this is supposed to be acceleration. Don't think it works though
@@ -241,11 +244,12 @@ public class MyGdxGame implements ApplicationListener {
         //From the angle the bubble is facing, the position is set so it will travel to the center
         body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
 
-        Float random = MathUtils.random(10f, 50f);//The numbers are arbitrary
-        circle.setRadius(random);
+        Float Circle_Radius = 35f;//assigns circle with certain radius
+        circle.setRadius(Circle_Radius);
 
         //for the physics
         fixtureDef.shape = circle;
+        fixtureDef.filter.maskBits = BIT_ASTEROID;//makes it so asteroids(bubbles) don't collide into each other
         body.createFixture(fixtureDef);
 
         //Sprite setup
@@ -263,7 +267,7 @@ public class MyGdxGame implements ApplicationListener {
         //I think the powers are arbitrary, from trial and error to get a speed that was about right
         //So the big bubbles are faster
         //(They're easier to click because they'e big, so the higher speed cancels it out)
-        body.setLinearVelocity(random * random * cosine * cosine * cosine, random * random * sine * sine * sine);//size ^2 * angle ^3
+        body.setLinearVelocity( Circle_Radius * Circle_Radius * cosine * cosine * cosine, Circle_Radius * Circle_Radius * sine * sine * sine);//size ^2 * angle ^3
 
         circle.dispose();
 
