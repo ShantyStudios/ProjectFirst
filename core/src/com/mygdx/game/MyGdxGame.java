@@ -90,7 +90,7 @@ public class MyGdxGame implements ApplicationListener {
         camera.setToOrtho(false, 800, 480);
 
         backgroundTexture = new Texture("background.jpg");
-        mainBubbleSprite = new Sprite(new Texture("bubble.png"));
+        mainBubbleSprite = new Sprite(new Texture("fireball.jpg"));
 
         dropSound = Gdx.audio.newSound(Gdx.files.internal("Sound/drop.wav"));
 
