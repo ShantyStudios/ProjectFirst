@@ -173,7 +173,7 @@ public class MyGdxGame implements ApplicationListener {
         }
 
         //Timed bubble spawning
-        if (bubbleTime > bubbles.size) {
+        if (bubbleTime > bubbles.size + 2) {
             spawnBubbles(3);//Spawn 3 bubbles at a time
         }
 
