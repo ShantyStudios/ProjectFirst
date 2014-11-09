@@ -21,6 +21,7 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
@@ -28,9 +29,9 @@ public class MyGdxGame implements ApplicationListener {
 
     //Constants
     public static final String TITLE = "Bubble Game";
-    public static final int WIDTH = 600;
+    public static final int WIDTH = 900;
     public static final int HEIGHT = 480;
-    public static final int BUBBLE_SPEED = 200;
+    public static final float BUBBLE_SPEED = 200f;
 
     private static final String[] MUSICS = {//Todo: generante from /assets/sound/music folder instead of listing
         "Run Amok.mp3",
@@ -60,6 +61,7 @@ public class MyGdxGame implements ApplicationListener {
     private Array<Body> bubbles;
 
     private BodyDef bodyDef;
+    private BodyDef bdefPlatform;
     private CircleShape circle;
     private FixtureDef fixtureDef;
 
@@ -71,7 +73,7 @@ public class MyGdxGame implements ApplicationListener {
     @Override
     public void create() {
         world = new World(new Vector2(0, 0), true);
-
+        
         //Bubble physics setup
         bodyDef = new BodyDef();
         bodyDef.type = BodyType.DynamicBody;
@@ -87,7 +89,7 @@ public class MyGdxGame implements ApplicationListener {
 
         //Setting up things
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 600, 480);
+        camera.setToOrtho(false, 900, 480);
 
         backgroundTexture = new Texture("background.jpg");
         mainBubbleSprite = new Sprite(new Texture("fireball.jpg"));
@@ -119,8 +121,11 @@ public class MyGdxGame implements ApplicationListener {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(backgroundTexture, 0, 0, 600, 480);//Draw this before bubbles
+        batch.draw(backgroundTexture, 0, 0, 900, 480);//Draw this before bubbles
 
+        //creates left and right bounds
+        boxForbounds();
+        
         //Draw the bubbles
         for (Body body : bubbles) {
             if (body.getUserData() != null && body.getUserData() instanceof Sprite) {
@@ -226,12 +231,14 @@ public class MyGdxGame implements ApplicationListener {
                 y <= HEIGHT;
     }
 
+    
     private void spawnBubbles() {
         spawnBubble();
         spawnBubble1();
         spawnBubble2();
     }
 
+    //spawn left most bubble
     private void spawnBubble() {
 
         circle = new CircleShape();
@@ -243,7 +250,7 @@ public class MyGdxGame implements ApplicationListener {
 
         //From the angle the bubble is facing, the position is set so it will travel to the center
       //body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
-        float xOrigin = MathUtils.random(50,199);
+        float xOrigin = MathUtils.random(35,WIDTH/3-1);
         body.setTransform(xOrigin,480,angle);
         
         Float Circle_Radius = 35f;//assigns circle with certain radius
@@ -270,7 +277,7 @@ public class MyGdxGame implements ApplicationListener {
         //So the big bubbles are faster
         //(They're easier to click because they'e big, so the higher speed cancels it out)
         body.setLinearVelocity( Circle_Radius * Circle_Radius * cosine * cosine * cosine, Circle_Radius * Circle_Radius * sine * sine * sine);//size ^2 * angle ^3
-
+       // body.setLinearVelocity(BUBBLE_SPEED,BUBBLE_SPEED);
         circle.dispose();
 
         bubbles.add(body);
@@ -278,6 +285,7 @@ public class MyGdxGame implements ApplicationListener {
         bubbleTime = 0;
     }
     
+    //spawn middle bubble
     private void spawnBubble1() {
 
         circle = new CircleShape();
@@ -289,7 +297,7 @@ public class MyGdxGame implements ApplicationListener {
 
         //From the angle the bubble is facing, the position is set so it will travel to the center
       //body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
-        float xOrigin = MathUtils.random(200,399);
+        float xOrigin = MathUtils.random(WIDTH/3,(2*WIDTH/3)-1);
         body.setTransform(xOrigin,480,angle);
         
         Float Circle_Radius = 35f;//assigns circle with certain radius
@@ -324,6 +332,7 @@ public class MyGdxGame implements ApplicationListener {
         bubbleTime = 0;
     }
     
+    //spawn right most bubble
     private void spawnBubble2() {
 
         circle = new CircleShape();
@@ -336,7 +345,7 @@ public class MyGdxGame implements ApplicationListener {
         //From the angle the bubble is facing, the position is set so it will travel to the center
        //body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
        
-        float xOrigin = MathUtils.random(401,550);
+        float xOrigin = MathUtils.random(2*WIDTH/3 + 1,WIDTH-35);
         body.setTransform(xOrigin,480,angle);
         
         Float Circle_Radius = 35f;//assigns circle with certain radius
@@ -371,6 +380,29 @@ public class MyGdxGame implements ApplicationListener {
         bubbleTime = 0;
     }
 
+    private void boxForbounds(){
+        //create right bound
+        bdefPlatform = new BodyDef();
+        bdefPlatform.position.set(0, 0);
+        bdefPlatform.type = BodyType.StaticBody;
+        Body body = world.createBody(bdefPlatform);
+        
+        PolygonShape pshape = new PolygonShape();
+        pshape.setAsBox(25,480);
+        FixtureDef fdef = new FixtureDef();
+        fdef.shape = pshape;
+        body.createFixture(fdef);
+        
+        //create left bound
+        bdefPlatform.position.set(WIDTH , 0);
+        bdefPlatform.type = BodyType.StaticBody;
+        body = world.createBody(bdefPlatform);
+        
+        pshape.setAsBox(25,480);
+        fdef.shape = pshape;
+        body.createFixture(fdef);
+    }
+    
     @Override
     public void resize(int width, int height) {
         // TODO Auto-generated method stub
