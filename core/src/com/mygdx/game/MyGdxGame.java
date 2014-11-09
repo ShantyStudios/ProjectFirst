@@ -32,7 +32,7 @@ public class MyGdxGame implements ApplicationListener {
     public static final String TITLE = "Bubble Game";
     public static final int WIDTH = 900;
     public static final int HEIGHT = 480;
-    private static final float BUBBLE_SPEED = 200f;
+    private static final float BUBBLE_SPEED = 100f;
     private static final float CIRCLE_RADIUS = 35f;
 
     private static final String[] MUSICS = {//Todo: generante from /assets/sound/music folder instead of listing
@@ -77,12 +77,13 @@ public class MyGdxGame implements ApplicationListener {
     public void create() {
         world = new World(new Vector2(0, 0), true);
 
-        //creates character
+        //Character creation
         character = new Rectangle();
         character.x = 800 / 2 - 64 / 2;
         character.y = 20;
         character.width = 10;
         character.height = 10;
+        //End character creation
 
         //Bubble physics setup
         bodyDef = new BodyDef();
@@ -156,11 +157,11 @@ public class MyGdxGame implements ApplicationListener {
                 continue;
             }
             //I think this is supposed to be acceleration. Don't think it works though
-            body.setLinearVelocity(body.getLinearVelocity().x * 4f, body.getLinearVelocity().y * 4f);
+            //body.setLinearVelocity(body.getLinearVelocity().x * 4f, body.getLinearVelocity().y * 4f);
         }
 
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        font.draw(batch, "Score: " + score, 500, 100);//Player score
+        font.draw(batch, "Score: " + score, 500, 100);//Player score display
 
         batch.end();
 
@@ -175,6 +176,7 @@ public class MyGdxGame implements ApplicationListener {
         if (Gdx.input.isKeyPressed(Keys.DOWN)) {
             score--;
         }
+        //End debug adjusting
 
         //Click handling
         if (Gdx.input.isTouched()) {
@@ -191,11 +193,13 @@ public class MyGdxGame implements ApplicationListener {
                 }
             }
         }
+        //End click handling
 
         //Timed bubble spawning
         if (bubbleTime > bubbles.size + 2) {
             spawnBubbles();//Spawn 3 bubbles at a time
         }
+        //End timed bubble spawning
 
         debugRenderer.render(world, camera.combined);
 
@@ -223,6 +227,8 @@ public class MyGdxGame implements ApplicationListener {
          font.draw(batch, "NumBubbles: " + bubbles.size, 0, 15);
          batch.end();
          */
+        //END LOGISTIC BUBBLE SPAWNING
+        //Character movement
         if (Gdx.input.isKeyPressed(Keys.LEFT)) {
             character.x -= 300 * Gdx.graphics.getDeltaTime();
         }
@@ -236,9 +242,10 @@ public class MyGdxGame implements ApplicationListener {
         if (character.x > WIDTH - 317) {
             character.x = WIDTH - 317;
         }
+        //End character movement
 
+        //This should be last
         world.step(1 / 60f, 6, 2);
-
     }
 
     /*
@@ -301,14 +308,10 @@ public class MyGdxGame implements ApplicationListener {
         float cosine = MathUtils.cos(body.getAngle());
         float sine = MathUtils.sin(body.getAngle());
 
-        //Soo the speed x, y is set fom cosine and sine of the angle from earlier.
-        //Then multiplied by random (Which is also the size of the bubble)
-        //Instead of math.pow wich I think is clunky, I opted to just multoply everything out.
-        //I think the powers are arbitrary, from trial and error to get a speed that was about right
-        //So the big bubbles are faster
-        //(They're easier to click because they'e big, so the higher speed cancels it out)
-        body.setLinearVelocity(CIRCLE_RADIUS * CIRCLE_RADIUS * cosine * cosine * cosine, CIRCLE_RADIUS * CIRCLE_RADIUS * sine * sine * sine);//size ^2 * angle ^3
-        // body.setLinearVelocity(BUBBLE_SPEED,BUBBLE_SPEED);
+        //cosine and sine adjust the movement according to the angle
+        Vector2 vel = new Vector2(cosine * cosine * cosine, sine * sine * sine);
+        vel = vel.scl(BUBBLE_SPEED);
+        body.setLinearVelocity(vel);
         circle.dispose();
 
         bubbles.add(body);
