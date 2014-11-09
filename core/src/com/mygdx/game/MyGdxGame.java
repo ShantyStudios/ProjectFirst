@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -62,17 +63,28 @@ public class MyGdxGame implements ApplicationListener {
 
     private BodyDef bodyDef;
     private BodyDef bdefPlatform;
+    private BodyDef bdefcharacter;
     private CircleShape circle;
     private FixtureDef fixtureDef;
+    private Rectangle character;
 
     //Game elements
     private double bubbleTime;
     private double bubbleTimeStep;
     private int score;
+    
+    
 
     @Override
     public void create() {
         world = new World(new Vector2(0, 0), true);
+        
+         //creates character
+        character = new Rectangle();
+        character.x = 800 / 2 - 64 / 2;
+        character.y = 20;
+        character.width = 10;      
+        character.height = 10;
         
         //Bubble physics setup
         bodyDef = new BodyDef();
@@ -118,12 +130,15 @@ public class MyGdxGame implements ApplicationListener {
     public void render() {
         Gdx.gl.glClearColor(0, 0, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+        
+        camera.update();
+        
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         //this comment below draws background
         //batch.draw(backgroundTexture, 0, 0, 900, 480);//Draw this before bubbles
         
+        batch.draw(backgroundTexture, character.x, character.y);
          
         //creates left and right bounds
         boxForbounds();
@@ -209,7 +224,14 @@ public class MyGdxGame implements ApplicationListener {
         font.draw(batch, "NumBubbles: " + bubbles.size, 0, 15);
         batch.end();
 
+        if(Gdx.input.isKeyPressed(Keys.LEFT)) character.x -= 300 * Gdx.graphics.getDeltaTime();
+        if(Gdx.input.isKeyPressed(Keys.RIGHT)) character.x += 300 * Gdx.graphics.getDeltaTime();
+        
+           if(character.x < 25) character.x = 25;
+           if(character.x > WIDTH -317) character.x = WIDTH - 317;
+        
         world.step(1 / 60f, 6, 2);
+        
     }
 
     /*
@@ -267,7 +289,7 @@ public class MyGdxGame implements ApplicationListener {
         Sprite bubbleSprite = new Sprite(mainBubbleSprite);
         bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//Set sprite size to match body. *2 for radius->diameter
         bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);//Set sprite on top of body
-        body.setUserData(bubbleSprite);
+        //body.setUserData(bubbleSprite);
 
         float cosine = MathUtils.cos(body.getAngle());
         float sine = MathUtils.sin(body.getAngle());
@@ -314,7 +336,7 @@ public class MyGdxGame implements ApplicationListener {
         Sprite bubbleSprite = new Sprite(mainBubbleSprite);
         bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//Set sprite size to match body. *2 for radius->diameter
         bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);//Set sprite on top of body
-        body.setUserData(bubbleSprite);
+       // body.setUserData(bubbleSprite);
 
         float cosine = MathUtils.cos(body.getAngle());
         float sine = MathUtils.sin(body.getAngle());
@@ -362,7 +384,7 @@ public class MyGdxGame implements ApplicationListener {
         Sprite bubbleSprite = new Sprite(mainBubbleSprite);
         bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//Set sprite size to match body. *2 for radius->diameter
         bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);//Set sprite on top of body
-        body.setUserData(bubbleSprite);
+       // body.setUserData(bubbleSprite);
 
         float cosine = MathUtils.cos(body.getAngle());
         float sine = MathUtils.sin(body.getAngle());
@@ -411,6 +433,11 @@ public class MyGdxGame implements ApplicationListener {
 
     }
 
+    //the character and his movements
+    public void characterAndMovement(){
+     
+    }
+    
     @Override
     public void pause() {
         // TODO Auto-generated method stub
