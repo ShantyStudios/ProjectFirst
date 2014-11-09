@@ -28,7 +28,7 @@ public class MyGdxGame implements ApplicationListener {
 
     //Constants
     public static final String TITLE = "Bubble Game";
-    public static final int WIDTH = 800;
+    public static final int WIDTH = 600;
     public static final int HEIGHT = 480;
     public static final int BUBBLE_SPEED = 200;
 
@@ -87,7 +87,7 @@ public class MyGdxGame implements ApplicationListener {
 
         //Setting up things
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 800, 480);
+        camera.setToOrtho(false, 600, 480);
 
         backgroundTexture = new Texture("background.jpg");
         mainBubbleSprite = new Sprite(new Texture("fireball.jpg"));
@@ -109,7 +109,7 @@ public class MyGdxGame implements ApplicationListener {
         bubbles = new Array<Body>();
 
         //And make the first bubbles to start the game
-        spawnBubbles(3);
+        spawnBubbles();
     }
 
     @Override
@@ -119,7 +119,7 @@ public class MyGdxGame implements ApplicationListener {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(backgroundTexture, 0, 0, 800, 480);//Draw this before bubbles
+        batch.draw(backgroundTexture, 0, 0, 600, 480);//Draw this before bubbles
 
         //Draw the bubbles
         for (Body body : bubbles) {
@@ -140,7 +140,7 @@ public class MyGdxGame implements ApplicationListener {
         }
 
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-        font.draw(batch, "Score: " + score, 700, 100);//Player score
+        font.draw(batch, "Score: " + score, 500, 100);//Player score
 
         batch.end();
 
@@ -174,7 +174,7 @@ public class MyGdxGame implements ApplicationListener {
 
         //Timed bubble spawning
         if (bubbleTime > bubbles.size + 2) {
-            spawnBubbles(3);//Spawn 3 bubbles at a time
+            spawnBubbles();//Spawn 3 bubbles at a time
         }
 
         debugRenderer.render(world, camera.combined);
@@ -226,10 +226,10 @@ public class MyGdxGame implements ApplicationListener {
                 y <= HEIGHT;
     }
 
-    private void spawnBubbles(int n) {
-        for (int i = 1; i <= n; i++) {
-            spawnBubble();
-        }
+    private void spawnBubbles() {
+        spawnBubble();
+        spawnBubble1();
+        spawnBubble2();
     }
 
     private void spawnBubble() {
@@ -239,11 +239,106 @@ public class MyGdxGame implements ApplicationListener {
         Body body = world.createBody(bodyDef);
 
         //Angle and position
+        float angle = MathUtils.random(4.712388f, 5.497787144f);//Random angle from 225 deg to 315 deg
+
+        //From the angle the bubble is facing, the position is set so it will travel to the center
+      //body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
+        float xOrigin = MathUtils.random(50,199);
+        body.setTransform(xOrigin,480,angle);
+        
+        Float Circle_Radius = 35f;//assigns circle with certain radius
+        circle.setRadius(Circle_Radius);
+
+        //for the physics
+        fixtureDef.shape = circle;
+        fixtureDef.filter.maskBits = BIT_ASTEROID;//makes it so asteroids(bubbles) don't collide into each other
+        body.createFixture(fixtureDef);
+
+        //Sprite setup
+        Sprite bubbleSprite = new Sprite(mainBubbleSprite);
+        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//Set sprite size to match body. *2 for radius->diameter
+        bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);//Set sprite on top of body
+        body.setUserData(bubbleSprite);
+
+        float cosine = MathUtils.cos(body.getAngle());
+        float sine = MathUtils.sin(body.getAngle());
+
+        //Soo the speed x, y is set fom cosine and sine of the angle from earlier.
+        //Then multiplied by random (Which is also the size of the bubble)
+        //Instead of math.pow wich I think is clunky, I opted to just multoply everything out.
+        //I think the powers are arbitrary, from trial and error to get a speed that was about right
+        //So the big bubbles are faster
+        //(They're easier to click because they'e big, so the higher speed cancels it out)
+        body.setLinearVelocity( Circle_Radius * Circle_Radius * cosine * cosine * cosine, Circle_Radius * Circle_Radius * sine * sine * sine);//size ^2 * angle ^3
+
+        circle.dispose();
+
+        bubbles.add(body);
+
+        bubbleTime = 0;
+    }
+    
+    private void spawnBubble1() {
+
+        circle = new CircleShape();
+
+        Body body = world.createBody(bodyDef);
+
+        //Angle and position
         float angle = MathUtils.random(3.926990817f, 5.497787144f);//Random angle from 225 deg to 315 deg
 
         //From the angle the bubble is facing, the position is set so it will travel to the center
-        body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
+      //body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
+        float xOrigin = MathUtils.random(200,399);
+        body.setTransform(xOrigin,480,angle);
+        
+        Float Circle_Radius = 35f;//assigns circle with certain radius
+        circle.setRadius(Circle_Radius);
 
+        //for the physics
+        fixtureDef.shape = circle;
+        fixtureDef.filter.maskBits = BIT_ASTEROID;//makes it so asteroids(bubbles) don't collide into each other
+        body.createFixture(fixtureDef);
+
+        //Sprite setup
+        Sprite bubbleSprite = new Sprite(mainBubbleSprite);
+        bubbleSprite.setSize(circle.getRadius() * 2, circle.getRadius() * 2);//Set sprite size to match body. *2 for radius->diameter
+        bubbleSprite.setOrigin(bubbleSprite.getWidth() / 2, bubbleSprite.getHeight() / 2);//Set sprite on top of body
+        body.setUserData(bubbleSprite);
+
+        float cosine = MathUtils.cos(body.getAngle());
+        float sine = MathUtils.sin(body.getAngle());
+
+        //Soo the speed x, y is set fom cosine and sine of the angle from earlier.
+        //Then multiplied by random (Which is also the size of the bubble)
+        //Instead of math.pow wich I think is clunky, I opted to just multoply everything out.
+        //I think the powers are arbitrary, from trial and error to get a speed that was about right
+        //So the big bubbles are faster
+        //(They're easier to click because they'e big, so the higher speed cancels it out)
+        body.setLinearVelocity( Circle_Radius * Circle_Radius * cosine * cosine * cosine, Circle_Radius * Circle_Radius * sine * sine * sine);//size ^2 * angle ^3
+
+        circle.dispose();
+
+        bubbles.add(body);
+
+        bubbleTime = 0;
+    }
+    
+    private void spawnBubble2() {
+
+        circle = new CircleShape();
+
+        Body body = world.createBody(bodyDef);
+
+        //Angle and position
+        float angle = MathUtils.random(4.0f, 5f);//Random angle from 225 deg to 315 deg
+
+        //From the angle the bubble is facing, the position is set so it will travel to the center
+       //body.setTransform(WIDTH - ((MathUtils.cos(angle) * .5f * WIDTH) + (.5f * WIDTH)), HEIGHT - ((MathUtils.sin(angle) * .5f * HEIGHT) + (.5f * HEIGHT)), angle);
+       
+        float xOrigin = MathUtils.random(401,550);
+        body.setTransform(xOrigin,480,angle);
+        
         Float Circle_Radius = 35f;//assigns circle with certain radius
         circle.setRadius(Circle_Radius);
 
