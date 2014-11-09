@@ -121,8 +121,10 @@ public class MyGdxGame implements ApplicationListener {
 
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(backgroundTexture, 0, 0, 900, 480);//Draw this before bubbles
-
+        //this comment below draws background
+        //batch.draw(backgroundTexture, 0, 0, 900, 480);//Draw this before bubbles
+        
+         
         //creates left and right bounds
         boxForbounds();
         
