@@ -141,7 +141,10 @@ public class MyGdxGame implements ApplicationListener {
 
         //creates left and right bounds
         boxForbounds();
-
+        
+        //uncomment once the character class is done
+        //character();
+        
         //Draw the bubbles
         for (Body body : bubbles) {
             if (body.getUserData() != null && body.getUserData() instanceof Sprite) {
@@ -320,27 +323,65 @@ public class MyGdxGame implements ApplicationListener {
     }
 
     private void boxForbounds() {
-        //create right bound
+        //create left bound
         bdefPlatform = new BodyDef();
         bdefPlatform.position.set(0, 0);
         bdefPlatform.type = BodyType.StaticBody;
         Body body = world.createBody(bdefPlatform);
 
         PolygonShape pshape = new PolygonShape();
-        pshape.setAsBox(25, 480);
+        pshape.setAsBox(25, HEIGHT);
         FixtureDef fdef = new FixtureDef();
         fdef.shape = pshape;
         body.createFixture(fdef);
 
-        //create left bound
-        bdefPlatform.position.set(WIDTH, 0);
+        //create right bound
+        bdefPlatform.position.set(WIDTH, 25);
         bdefPlatform.type = BodyType.StaticBody;
         body = world.createBody(bdefPlatform);
 
-        pshape.setAsBox(25, 480);
+        pshape.setAsBox(-25, HEIGHT);
+        fdef.shape = pshape;
+        body.createFixture(fdef);
+        
+        //create bottom bound
+        bdefPlatform.position.set(0,0);
+        bdefPlatform.type = BodyType.StaticBody;
+        body = world.createBody(bdefPlatform);
+        
+        pshape.setAsBox(WIDTH, 25);
         fdef.shape = pshape;
         body.createFixture(fdef);
     }
+    //process of making character a box2d thing so yea
+   /* private void character(){
+            BodyDef bodyDef = new BodyDef();
+            // We set our body to dynamic, for something like ground which doesn't move we would set it to StaticBody
+            bodyDef.type = BodyType.DynamicBody;
+            // Set our body's starting position in the world
+            bodyDef.position.set(100, 300);
+
+            // Create our body in the world using our body definition
+            Body body = world.createBody(bodyDef);
+
+            // Create a circle shape and set its radius to 6
+            CircleShape circle = new CircleShape();
+            circle.setRadius(6f);
+
+            // Create a fixture definition to apply our shape to
+            FixtureDef fixtureDef = new FixtureDef();
+            fixtureDef.shape = circle;
+            fixtureDef.density = 0.5f; 
+            fixtureDef.friction = 0.4f;
+            fixtureDef.restitution = 0.6f; // Make it bounce a little bit
+
+            // Create our fixture and attach it to the body
+            Fixture fixture = body.createFixture(fixtureDef);
+
+            // Remember to dispose of any shapes after you're done with them!
+            // BodyDef and FixtureDef don't need disposing, but shapes do.
+            circle.dispose();
+    }*/
 
     @Override
     public void resize(int width, int height) {
