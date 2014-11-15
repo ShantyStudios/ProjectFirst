@@ -141,10 +141,9 @@ public class MyGdxGame implements ApplicationListener {
 
         //creates left and right bounds
         boxForbounds();
-        
+
         //uncomment once the character class is done
         //character();
-        
         //Draw the bubbles
         for (Body body : bubbles) {
             if (body.getUserData() != null && body.getUserData() instanceof Sprite) {
@@ -161,6 +160,12 @@ public class MyGdxGame implements ApplicationListener {
             }
             //I think this is supposed to be acceleration. Don't think it works though
             //body.setLinearVelocity(body.getLinearVelocity().x * 4f, body.getLinearVelocity().y * 4f);
+
+            body.applyForceToCenter(
+                    new Vector2(
+                            (float) Math.cos(body.getAngle()),
+                            (float) Math.sin(body.getAngle())
+                    ).scl(BUBBLE_SPEED), true);
         }
 
         font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -315,6 +320,7 @@ public class MyGdxGame implements ApplicationListener {
         Vector2 vel = new Vector2(cosine * cosine * cosine, sine * sine * sine);
         vel = vel.scl(BUBBLE_SPEED);
         body.setLinearVelocity(vel);
+
         circle.dispose();
 
         bubbles.add(body);
@@ -343,45 +349,45 @@ public class MyGdxGame implements ApplicationListener {
         pshape.setAsBox(-25, HEIGHT);
         fdef.shape = pshape;
         body.createFixture(fdef);
-        
+
         //create bottom bound
-        bdefPlatform.position.set(0,0);
+        bdefPlatform.position.set(0, 0);
         bdefPlatform.type = BodyType.StaticBody;
         body = world.createBody(bdefPlatform);
-        
+
         pshape.setAsBox(WIDTH, 25);
         fdef.shape = pshape;
         body.createFixture(fdef);
     }
     //process of making character a box2d thing so yea
    /* private void character(){
-            BodyDef bodyDef = new BodyDef();
-            // We set our body to dynamic, for something like ground which doesn't move we would set it to StaticBody
-            bodyDef.type = BodyType.DynamicBody;
-            // Set our body's starting position in the world
-            bodyDef.position.set(100, 300);
+     BodyDef bodyDef = new BodyDef();
+     // We set our body to dynamic, for something like ground which doesn't move we would set it to StaticBody
+     bodyDef.type = BodyType.DynamicBody;
+     // Set our body's starting position in the world
+     bodyDef.position.set(100, 300);
 
-            // Create our body in the world using our body definition
-            Body body = world.createBody(bodyDef);
+     // Create our body in the world using our body definition
+     Body body = world.createBody(bodyDef);
 
-            // Create a circle shape and set its radius to 6
-            CircleShape circle = new CircleShape();
-            circle.setRadius(6f);
+     // Create a circle shape and set its radius to 6
+     CircleShape circle = new CircleShape();
+     circle.setRadius(6f);
 
-            // Create a fixture definition to apply our shape to
-            FixtureDef fixtureDef = new FixtureDef();
-            fixtureDef.shape = circle;
-            fixtureDef.density = 0.5f; 
-            fixtureDef.friction = 0.4f;
-            fixtureDef.restitution = 0.6f; // Make it bounce a little bit
+     // Create a fixture definition to apply our shape to
+     FixtureDef fixtureDef = new FixtureDef();
+     fixtureDef.shape = circle;
+     fixtureDef.density = 0.5f;
+     fixtureDef.friction = 0.4f;
+     fixtureDef.restitution = 0.6f; // Make it bounce a little bit
 
-            // Create our fixture and attach it to the body
-            Fixture fixture = body.createFixture(fixtureDef);
+     // Create our fixture and attach it to the body
+     Fixture fixture = body.createFixture(fixtureDef);
 
-            // Remember to dispose of any shapes after you're done with them!
-            // BodyDef and FixtureDef don't need disposing, but shapes do.
-            circle.dispose();
-    }*/
+     // Remember to dispose of any shapes after you're done with them!
+     // BodyDef and FixtureDef don't need disposing, but shapes do.
+     circle.dispose();
+     }*/
 
     @Override
     public void resize(int width, int height) {
